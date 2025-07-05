@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Maze Solver</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .controls {
+      margin: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .controls input {
+      width: 60px;
+      padding: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-weight: bold;
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    #maze {
+      display: grid;
+      justify-content: center;
+      margin: 20px auto;
+      gap: 1px;
+      width: min(90vw, 600px);
+      max-height: 80vh;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      width: 100%;
+      background-color: white;
+      transition: background 0.2s ease;
+    }
+
+    .wall {
+      background-color: black;
+    }
+
+    .path {
+      background-color: limegreen;
+    }
+
+    .start {
+      background-color: orange;
+    }
+
+    .end {
+      background-color: red;
+    }
+
+    footer {
+      margin: 20px 0;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>Maze Solver with Backtracking</h1>
+
+  <div class="controls">
+    <label>Rows: <input type="number" id="rows" value="10" min="5" max="50"></label>
+    <label>Cols: <input type="number" id="cols" value="10" min="5" max="50"></label>
+    <button onclick="generateMaze()">Generate Maze</button>
+    <button onclick="solveMaze()">Solve Maze</button>
+  </div>
+
+  <div id="maze"></div>
+
+  <footer>Made with ❤️ using JavaScript</footer>
+
+  <script>
+    let rows = 10;
+    let cols = 10;
+    let maze = [];
+    let visited = [];
+    const mazeElement = document.getElementById("maze");
+
+    const directions = [
+      [0, 1], [1, 0], [0, -1], [-1, 0]
+    ];
+
+    let start = [0, 0];
+    let end = [9, 9];
+
+    function getCell(r, c) {
+      return mazeElement.children[r * cols + c];
+    }
+
+    function generateMaze() {
+      rows = parseInt(document.getElementById("rows").value);
+      cols = parseInt(document.getElementById("cols").value);
+
+      mazeElement.innerHTML = '';
+      mazeElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+      maze = [];
+      visited = [];
+
+      for (let r = 0; r < rows; r++) {
+        maze[r] = [];
+        visited[r] = [];
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+
+          if (Math.random() < 0.3 && !(r === 0 && c === 0) && !(r === rows - 1 && c === cols - 1)) {
+            maze[r][c] = 1; // wall
+            cell.classList.add("wall");
+          } else {
+            maze[r][c] = 0; // path
+          }
+
+          mazeElement.appendChild(cell);
+        }
+      }
+
+      start = [0, 0];
+      end = [rows - 1, cols - 1];
+      getCell(...start).classList.add("start");
+      getCell(...end).classList.add("end");
+    }
+
+    async function solveMaze() {
+      visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+      await backtrack(start[0], start[1]);
+    }
+
+    async function backtrack(r, c) {
+      if (r < 0 || c < 0 || r >= rows || c >= cols) return false;
+      if (maze[r][c] === 1 || visited[r][c]) return false;
+
+      visited[r][c] = true;
+
+      const cell = getCell(r, c);
+      if (!(r === start[0] && c === start[1]) && !(r === end[0] && c === end[1])) {
+        cell.classList.add("path");
+        await new Promise(res => setTimeout(res, 30));
+      }
+
+      if (r === end[0] && c === end[1]) return true;
+
+      for (const [dr, dc] of directions) {
+        if (await backtrack(r + dr, c + dc)) return true;
+      }
+
+      if (!(r === start[0] && c === start[1]) && !(r === end[0] && c === end[1])) {
+        cell.style.backgroundColor = '#ccc';
+      }
+
+      return false;
+    }
+
+    // Initial maze load
+    generateMaze();
+  </script>
+</body>
+</html>
